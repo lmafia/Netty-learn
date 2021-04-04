@@ -53,6 +53,7 @@ public class EchoServer {
                     SocketChannel channel = (SocketChannel) key.channel();
                     ByteBuffer buffer = ByteBuffer.allocate(64);
                     channel.read(buffer);
+                    System.out.println("收到心跳:" + new String(buffer.array()));
                     if (buffer.hasRemaining() && buffer.get(0) == '4') {// 传输结束
                         channel.close();
                         System.out.println("关闭管道：" + channel.socket());
@@ -60,7 +61,7 @@ public class EchoServer {
                     }
                     buffer.put(String.valueOf(System.currentTimeMillis()).getBytes());
                     buffer.flip();
-                    System.out.println(new String(buffer.array()));
+                    System.out.println("返回心跳: " + new String(buffer.array()));
                     channel.write(buffer);
                 }
             }
