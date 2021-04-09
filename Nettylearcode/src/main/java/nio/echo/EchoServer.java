@@ -1,4 +1,4 @@
-package echo;
+package nio.echo;
 
 import org.junit.Test;
 
@@ -45,7 +45,8 @@ public class EchoServer {
                 iterator.remove();
                 if (!key.isValid()) {
                     continue;
-                } else if (key.isAcceptable()) {
+                }
+                if (key.isAcceptable()) {
                     SocketChannel socketChannel = serverListener.accept();
                     socketChannel.configureBlocking(false);
                     socketChannel.register(selector, SelectionKey.OP_READ);
@@ -54,7 +55,10 @@ public class EchoServer {
                     ByteBuffer buffer = ByteBuffer.allocate(64);
                     channel.read(buffer);
                     System.out.println("收到心跳:" + new String(buffer.array()));
-                    if (buffer.hasRemaining() && buffer.get(0) == '4') {// 传输结束
+                    /*
+                     * 字节'4' 在ASCII中 表示EOT (end of transmission )传输结束，所以在管道中读取到4这个字节，即可手动的去关闭连接。
+                     */
+                    if (buffer.hasRemaining() && buffer.get(0) == 4) {
                         channel.close();
                         System.out.println("关闭管道：" + channel.socket());
                         break;

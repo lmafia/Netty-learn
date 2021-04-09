@@ -1,4 +1,4 @@
-package channel;
+package nio.channel;
 
 import org.junit.Test;
 
