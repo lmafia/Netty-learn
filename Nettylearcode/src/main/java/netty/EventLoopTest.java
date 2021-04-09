@@ -1,6 +1,7 @@
 package netty;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
@@ -12,6 +13,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
@@ -87,7 +89,10 @@ public class EventLoopTest {
                     @Override
                     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
                         if (msg instanceof ByteBuf) {
-                            System.out.println(System.currentTimeMillis()+ "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()));}
+                            System.out.println(System.currentTimeMillis()+ "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()));
+                            ChannelFuture channelFuture = ctx.channel().writeAndFlush(Unpooled.copiedBuffer(System.currentTimeMillis() + "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()),Charset.defaultCharset()));
+                            channelFuture.addListener(future -> System.out.println("写出成功"));
+                        }
                     }
                 });
 
