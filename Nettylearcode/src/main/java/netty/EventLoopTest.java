@@ -62,6 +62,8 @@ public class EventLoopTest {
         scanner.nextInt();
         group.shutdownGracefully();
     }
+
+
     @Test
     public void test2() throws InterruptedException {
         //1.创建NioEventGroup

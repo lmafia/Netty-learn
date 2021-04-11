@@ -23,7 +23,7 @@ Netty使用的是主从Reactor多线程模型。
 
 #### 2.单Reactor多线程模型
 
-为了防止阻塞，该线程模型下，请求连接建立、I/O读写在一个Reactor线程完成，另外业务处理在一个线程池中异步处理完成，处理完再回写。
+为了防止阻塞，该线程模型下，请求连接建立（包括授权认证等）、I/O读写在一个Reactor线程完成，另外业务处理在一个线程池中异步处理完成，处理完再回写。
 
 ![image-20210410191451273](https://raw.githubusercontent.com/lmafia/private-picture-could/main/20210410191451.png?token=AGSD2IFDGFPTO65G5HGDO43AOGEOS)
 
@@ -31,6 +31,12 @@ Netty使用的是主从Reactor多线程模型。
 
 #### 3.主从Reactor多线程模型
 
-因为单Reactor还能不能榨干CPU多核的能力，所以可以建立多个Reactor线程。该线程模型下，有一主多从Reactor。主Reactor是进行请求连接建立，从Reactor们用于处理I/O读写，业务处理同样还是在一个线程池中异步处理。
+因为单Reactor还能不能榨干CPU多核的能力，所以可以建立多个Reactor线程。该线程模型下，有一主多从Reactor。主Reactor是进行请求连接建立（包括授权认证等），从Reactor们用于处理I/O读写，业务处理同样还是在一个线程池中异步处理。
 
 ![image-20210410192257512](https://raw.githubusercontent.com/lmafia/private-picture-could/main/20210410192257.png?token=AGSD2IFNZWP7L6JHNYC4MJLAOGFM6)
+
+### Netty的线程模型
+
+![image-20210410203400672](https://raw.githubusercontent.com/lmafia/private-picture-could/main/20210410203400.png?token=AGSD2IFPH7YRNCPVVJ5XQMLAOGNXM)
+
+Netty线程模型组成大概有ServerBootStrap、NioEventLoopGroup和它的成份NioEventLoop、NioChannel、ChannelPipeline、ChannelHandler等等。
