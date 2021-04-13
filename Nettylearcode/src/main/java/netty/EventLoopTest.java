@@ -1,5 +1,6 @@
 package netty;
 
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -26,19 +27,19 @@ import java.util.Scanner;
 public class EventLoopTest {
     @Test
     public void test() {
-        //构建EventLoop
+        //构建EventLoopGroup 线程数 为1,就是只有一个EventLoop
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         //下面证明eventLoop是一个线程池,提交的任务的都是同一个线程处理的
         group.execute(() -> System.out.println("L_MaFia create the EventLoopGroup " + Thread.currentThread().getId()));
         Future<?> submit = group.submit(() -> System.out.println("submit task " + Thread.currentThread().getId()));
-        submit.addListener(future -> System.out.println("完成任务啦"+Thread.currentThread().getId()));
+        submit.addListener(future -> System.out.println("完成任务啦" + Thread.currentThread().getId()));
         Scanner scanner = new Scanner(System.in);
         scanner.nextInt();
         group.shutdownGracefully();
     }
 
     @Test
-    public void test1() throws InterruptedException {
+    public void test1() {
         //1.创建NioEventGroup
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         //2.创建Channel
@@ -47,14 +48,14 @@ public class EventLoopTest {
         ChannelFuture register = group.register(channel);
         register.addListener(future -> System.out.println("完成注册"));
         //4.将Channel绑定端口
-        ChannelFuture future = channel.bind(new InetSocketAddress(8080)).sync();
-        future.addListener((future1)-> System.out.println("完成绑定"));
+        ChannelFuture future = channel.bind(new InetSocketAddress(8080));
+        future.addListener((future1) -> System.out.println("完成绑定"));
         //5.为Channel的pipeline 添加 Handler
         channel.pipeline().addLast(new SimpleChannelInboundHandler() {
             @Override
             protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
                 if (msg instanceof DatagramPacket) {
-                    System.out.println(System.currentTimeMillis()+ "_:" + ((DatagramPacket) msg).content().toString(Charset.defaultCharset()));
+                    System.out.println(System.currentTimeMillis() + "_:" + ((DatagramPacket) msg).content().toString(Charset.defaultCharset()));
                 }
             }
         });
@@ -75,24 +76,24 @@ public class EventLoopTest {
         register.addListener(future -> System.out.println("完成注册"));
         //4.将Channel绑定端口
         ChannelFuture future = channel.bind(new InetSocketAddress(8080)).sync();
-        future.addListener((future1)-> System.out.println("完成绑定"));
+        future.addListener((future1) -> System.out.println("完成绑定"));
         //5.为Channel的pipeline 添加 Handler
         channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
             @Override
             //当读取到客户端连接事件
             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                 //获取socket channel
-                NioSocketChannel socketChannel = (NioSocketChannel)msg;
+                NioSocketChannel socketChannel = (NioSocketChannel) msg;
                 //使用了同一个group来注册channel
                 ChannelFuture register = group.register(socketChannel);
-                register.addListener((future)-> System.out.println("完成注册"));
+                register.addListener((future) -> System.out.println("完成注册"));
                 //为Channel的pipeline 添加 Handler
                 socketChannel.pipeline().addLast(new SimpleChannelInboundHandler() {
                     @Override
                     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
                         if (msg instanceof ByteBuf) {
-                            System.out.println(System.currentTimeMillis()+ "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()));
-                            ChannelFuture channelFuture = ctx.channel().writeAndFlush(Unpooled.copiedBuffer(System.currentTimeMillis() + "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()),Charset.defaultCharset()));
+                            System.out.println(System.currentTimeMillis() + "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()));
+                            ChannelFuture channelFuture = ctx.channel().writeAndFlush(Unpooled.copiedBuffer(System.currentTimeMillis() + "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()), Charset.defaultCharset()));
                             channelFuture.addListener(future -> System.out.println("写出成功"));
                         }
                     }
@@ -104,4 +105,38 @@ public class EventLoopTest {
         scanner.nextInt();
         group.shutdownGracefully();
     }
+
+    @Test
+    public void test3() throws InterruptedException {
+        //指定要打开的管道 自动进行进行注册==》NioServerSocketChannel ->        .channel(NioServerSocketChannel.class)
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup work = new NioEventLoopGroup(8);
+        bootstrap.group(boss, work).channel(NioServerSocketChannel.class);
+
+        //5.为Channel的pipeline 添加 Handler
+        bootstrap.childHandler(new ChannelInitializer<Channel>() {
+            @Override
+            protected void initChannel(Channel ch) throws Exception {
+                ch.pipeline().addLast(new MyChannelHandler());
+            }
+        });
+        ChannelFuture future = bootstrap.bind(new InetSocketAddress(8080)).sync();
+        future.addListener((future1) -> System.out.println("完成绑定"));
+        Scanner scanner = new Scanner(System.in);
+        scanner.nextInt();
+    }
+
+
+    class MyChannelHandler extends SimpleChannelInboundHandler {
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+            if (msg instanceof ByteBuf) {
+                System.out.println(System.currentTimeMillis() + "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()));
+                ChannelFuture channelFuture = ctx.channel().writeAndFlush(Unpooled.copiedBuffer(System.currentTimeMillis() + "_:" + ((ByteBuf) msg).toString(Charset.defaultCharset()), Charset.defaultCharset()));
+                channelFuture.addListener(future -> System.out.println("写出成功"));
+            }
+        }
+    }
+
 }
