@@ -11,18 +11,12 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
-import io.netty.util.concurrent.EventExecutor;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author L_MaFia
@@ -30,7 +24,7 @@ import java.util.List;
  * @description TODO
  * @date 2021/4/14
  */
-public class BroadcastServer {
+public class WebSocketServer {
 
     private ByteBuf page;
     private ChannelGroup channels;
@@ -68,7 +62,7 @@ public class BroadcastServer {
     }
 
     private void initialStaticPage() throws URISyntaxException, IOException {
-        URL location = BroadcastServer.class.getProtectionDomain().getCodeSource().getLocation();
+        URL location = WebSocketServer.class.getProtectionDomain().getCodeSource().getLocation();
         String path = location.toURI() + "Websocket.html";
         path = !path.contains("file:") ? path : path.substring(6);
         RandomAccessFile file = new RandomAccessFile(path, "r");
@@ -99,22 +93,17 @@ public class BroadcastServer {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) throws Exception {
-            if (msg != null) {
-                System.out.println(msg.content().toString(Charset.defaultCharset()));
+            System.out.println(msg.text());
+            if (msg.text().equals("add")) {
+                channels.add(ctx.channel());
             }
             channels.writeAndFlush(new TextWebSocketFrame(msg.text()));
-        }
-
-        @Override
-        public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-           channels.add(ctx.channel());
-
         }
     }
 
     public static void main(String[] args) throws InterruptedException, IOException, URISyntaxException {
-        BroadcastServer broadcastServer = new BroadcastServer();
-        broadcastServer.openServer(8080);
+        WebSocketServer webSocketServer = new WebSocketServer();
+        webSocketServer.openServer(8080);
     }
 
 }
