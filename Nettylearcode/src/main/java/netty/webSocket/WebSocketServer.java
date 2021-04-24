@@ -23,6 +23,9 @@ import java.nio.ByteBuffer;
  * @classname BroadcastServer.java
  * @description TODO
  * @date 2021/4/14
+ *
+ *
+ * https://netty.io/4.0/xref/io/netty/example/http/websocketx/client/WebSocketClient.html
  */
 public class WebSocketServer {
 
