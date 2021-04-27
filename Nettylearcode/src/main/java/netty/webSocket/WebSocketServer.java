@@ -25,8 +25,9 @@ import java.nio.ByteBuffer;
  * @date 2021/4/14
  *
  *
- * https://netty.io/4.0/xref/io/netty/example/http/websocketx/client/WebSocketClient.html
+ *
  */
+//https://netty.io/4.1/xref/io/netty/example/http/websocketx/server/WebSocketServer.html
 public class WebSocketServer {
 
     private ByteBuf page;

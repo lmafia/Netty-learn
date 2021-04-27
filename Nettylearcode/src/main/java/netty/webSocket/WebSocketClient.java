@@ -25,6 +25,7 @@ import java.sql.SQLOutput;
  * @description TODO
  * @date 2021/4/15
  */
+//https://netty.io/4.0/xref/io/netty/example/http/websocketx/client/WebSocketClient.html
 public class WebSocketClient {
 
 
@@ -50,7 +51,6 @@ public class WebSocketClient {
         Channel ch = connect.channel();
         BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
         try {
-
 
             while (true) {
                 String msg = console.readLine();
